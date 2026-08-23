@@ -1,0 +1,10 @@
+# PyTorch is NOT listed here — install it separately following the README,
+# matched to your CUDA version. A plain pip install from this file could give
+# you a CPU-only torch build silently.
+
+jupyter
+ipykernel
+numpy
+matplotlib
+pillow
+kaggle
