@@ -1,14 +1,11 @@
 # Satellite Image Road Segmentation
 
-Learning project: semantic segmentation on satellite/aerial imagery, starting with binary
-road segmentation on the Massachusetts Roads Dataset, using PyTorch.
-
 ## Setup
 
 ### 1. Clone and create a virtual environment
 
 ```powershell
-git clone https://github.com/<your-username>/<repo-name>.git
+git clone https://github.com/BerkayAtmn/deeplearning
 cd deeplearning
 python -m venv .venv
 .venv\Scripts\Activate.ps1
@@ -68,13 +65,3 @@ data/
     test/
     test_labels/
 ```
-
-(Exact subfolder names may vary slightly — confirm against what you actually get after unzipping.)
-
-## Notes
-
-- `data/` and `.venv/` are gitignored — never committed. Re-run steps 3 and 5 on any new machine.
-- Model checkpoints (`*.pth`, `*.pt`) are also gitignored — too large for plain git.
-- GPU verification: if `torch.cuda.is_available()` returns `False` after install, your PyTorch
-  build likely doesn't match your CUDA version — reinstall using the correct command from
-  pytorch.org rather than debugging further.

@@ -8,7 +8,7 @@ env/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data (too large for git, re-download via Kaggle CLI instead)
+# Data
 data/
 
 # OS
