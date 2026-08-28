@@ -22,7 +22,8 @@ train_transform = v2.Compose([
 ])
 
 val_transform = v2.Compose([
-    v2.CenterCrop(size=(512, 512)),
+    # No crop: validation runs sliding-window inference over the full tile,
+    # so it needs the tile at full resolution.
     v2.ToDtype(torch.float32, scale=True),
     v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
