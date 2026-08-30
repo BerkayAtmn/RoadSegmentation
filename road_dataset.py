@@ -6,32 +6,43 @@ from torchvision.io import read_image, ImageReadMode
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 import os
 
 root_massachusetts = r"C:\Dev\deeplearning\data\massachusetts-roads-dataset"
 root_deepglobe = r"C:\Dev\deeplearning\data\deepglobe"
 
-# Define v2 transformation pipelines
+# Geometric ops only — cheap on uint8, and keeping the tensors uint8 here means
+# 4x less data crossing worker -> pinned memory -> GPU. ToDtype/Normalize now
+# happen on the GPU after transfer (see notebook).
 train_transform = v2.Compose([
     v2.RandomCrop(size=(512, 512)),
     v2.RandomHorizontalFlip(p=0.5),
     v2.RandomVerticalFlip(p=0.5),
-    v2.ToDtype(torch.float32, scale=True),
-    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-val_transform = v2.Compose([
-    # No crop: validation runs sliding-window inference over the full tile,
-    # so it needs the tile at full resolution.
-    v2.ToDtype(torch.float32, scale=True),
-    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
+# No crop: validation runs sliding-window inference over the full tile,
+# so it needs the tile at full resolution. Nothing else to do on CPU.
+val_transform = None
+
+
+def _read_image_uint8(path, mode):
+    """torchvision's read_image doesn't decode TIFF (Massachusetts ships .tiff/.tif);
+    fall back to PIL/libtiff for whatever it can't handle."""
+    try:
+        return read_image(path, mode=mode)
+    except RuntimeError:
+        pil_mode = 'RGB' if mode == ImageReadMode.RGB else 'L'
+        arr = np.array(Image.open(path).convert(pil_mode))
+        arr = arr[None, :, :] if arr.ndim == 2 else arr.transpose(2, 0, 1)
+        return torch.from_numpy(arr.copy())
+
 
 class RoadImageDataset(Dataset):
     # (image_col, mask_col) for each supported layout
     COLUMN_SETS = [
-        ('png_image_path', 'png_label_path'),    # Massachusetts (tiff_/tif_ don't decode via read_image)
+        ('tiff_image_path', 'tif_label_path'),   # Massachusetts (the png_* columns' files aren't on disk)
         ('sat_image_path', 'mask_path'),         # DeepGlobe
     ]
 
@@ -78,8 +89,8 @@ class RoadImageDataset(Dataset):
         mask_path = os.path.join(self.root, mask_path)
 
         # Read directly into PyTorch tensors (returns uint8)
-        image_tensor = read_image(image_path, mode=ImageReadMode.RGB)
-        mask_tensor = read_image(mask_path, mode=ImageReadMode.GRAY)
+        image_tensor = _read_image_uint8(image_path, ImageReadMode.RGB)
+        mask_tensor = _read_image_uint8(mask_path, ImageReadMode.GRAY)
 
         # Fast tensor boolean logic
         mask_tv = tv_tensors.Mask((mask_tensor > 127).to(torch.uint8))
@@ -88,7 +99,8 @@ class RoadImageDataset(Dataset):
         if self.transform is not None:
             image_tensor, label_tensor = self.transform(image_tv, mask_tv)
         else:
-            image_tensor = v2.functional.to_dtype(image_tv, torch.float32, scale=True)
-            label_tensor = mask_tv
+            # No CPU-side transform (e.g. val): pass the tile through unchanged, still
+            # uint8. Dtype conversion/normalization happens on the GPU (see notebook).
+            image_tensor, label_tensor = image_tv, mask_tv
 
         return image_tensor, label_tensor

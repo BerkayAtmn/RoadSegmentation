@@ -4,3 +4,4 @@ numpy
 matplotlib
 pillow
 kaggle
+triton-windows ; platform_system == "Windows"  # torch.compile's inductor backend needs Triton
