@@ -1,0 +1,25 @@
+# Core training / inference stack.
+# torch/torchvision here are the CPU/default-CUDA wheels from PyPI; for a
+# specific CUDA version install from https://pytorch.org/get-started/locally/
+# instead (this project was trained with torch==2.13.0+cu132) before
+# installing the rest of this file.
+torch>=2.4
+torchvision>=0.19
+segmentation-models-pytorch>=0.5
+safetensors>=0.4
+huggingface_hub>=0.24
+
+numpy>=1.26
+pandas>=2.2
+tifffile>=2024.1
+pillow>=10.0
+scikit-image>=0.23
+scipy>=1.11
+matplotlib>=3.8
+tqdm>=4.66
+
+# Dataset download (DeepGlobe / Mass Roads via Kaggle, see README)
+kaggle>=1.6
+
+# Notebook
+jupyter>=1.0

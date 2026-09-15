@@ -1,0 +1,23 @@
+# Datasets and generated corpus (see README for how to obtain/build these)
+/data/
+/unified_dataset/
+
+# Trained model checkpoints (large binaries, not tracked in git)
+/trained_models/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
